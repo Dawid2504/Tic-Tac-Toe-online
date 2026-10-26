@@ -214,10 +214,9 @@
       import {
         getDatabase,
         ref,
-        set,
         get,
         onValue,
-        update,
+        remove,
         runTransaction,
       } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
@@ -239,6 +238,9 @@
       // App State
       let currentRoomCode = null;
       let myRole = null;
+      let unsubscribeRoom = null;
+      let cleanupTimer = null;
+      let isLeavingRoom = false;
       const myPlayerId =
         sessionStorage.getItem("tic-tac-toe-player-id") ||
         Math.random().toString(36).substring(2, 9);
@@ -316,15 +318,6 @@
 
       async function createAndJoinRoom(code) {
         const roomRef = ref(db, "rooms/" + code);
-        const snapshot = await get(roomRef);
-
-        if (snapshot.exists()) {
-          createAndJoinRoom(
-            Math.random().toString(36).substring(2, 8).toUpperCase(),
-          );
-          return;
-        }
-
         const initialData = {
           board: Array(9).fill(""),
           turn: "X",
@@ -333,28 +326,76 @@
           winner: null,
         };
 
-        await set(roomRef, initialData);
+        const result = await runTransaction(roomRef, (data) => {
+          if (data !== null) return;
+          return initialData;
+        });
+
+        if (!result.committed) {
+          createAndJoinRoom(
+            Math.random().toString(36).substring(2, 8).toUpperCase(),
+          );
+          return;
+        }
+
         enterRoom(code, "X");
       }
 
       async function joinRoom(code) {
         const roomRef = ref(db, "rooms/" + code);
-        const snapshot = await get(roomRef);
+        let snapshot;
+        try {
+          snapshot = await get(roomRef);
+        } catch (error) {
+          console.error("Raum konnte nicht geladen werden:", error);
+          alert("Der Raum konnte gerade nicht geladen werden.");
+          return;
+        }
 
         if (!snapshot.exists()) {
           alert("Raum nicht gefunden!");
           return;
         }
 
-        const result = await runTransaction(roomRef, (data) => {
-          if (!data || data.status === "closed") return data;
-          if (data.playerX === myPlayerId || data.playerO === myPlayerId) {
+        const currentData = snapshot.val();
+        if (
+          currentData.status === "closed" ||
+          (currentData.playerX &&
+            currentData.playerO &&
+            currentData.playerX !== myPlayerId &&
+            currentData.playerO !== myPlayerId)
+        ) {
+          alert("Der Raum ist bereits voll oder wurde beendet.");
+          return;
+        }
+
+        if (currentData.playerX === myPlayerId) {
+          enterRoom(code, "X");
+          return;
+        }
+
+        let result;
+        try {
+          result = await runTransaction(roomRef, (data) => {
+            if (!data || data.status === "closed") return data;
+            if (data.playerX === myPlayerId || data.playerO === myPlayerId) {
+              return data;
+            }
+            if (!data.playerX) data.playerX = myPlayerId;
+            else if (!data.playerO) data.playerO = myPlayerId;
+            else return;
             return data;
-          }
-          if (!data.playerX) data.playerX = myPlayerId;
-          else if (!data.playerO) data.playerO = myPlayerId;
-          return data;
-        });
+          });
+        } catch (error) {
+          console.error("Beitritt zum Raum fehlgeschlagen:", error);
+          alert("Der Raum konnte gerade nicht betreten werden.");
+          return;
+        }
+
+        if (!result.committed) {
+          alert("Der Raum wurde inzwischen von einem anderen Spieler belegt.");
+          return;
+        }
 
         const data = result.snapshot.val();
         const role =
@@ -388,7 +429,8 @@
 
       function listenToRoom() {
         const roomRef = ref(db, "rooms/" + currentRoomCode);
-        onValue(roomRef, (snapshot) => {
+        unsubscribeRoom?.();
+        unsubscribeRoom = onValue(roomRef, (snapshot) => {
           if (!snapshot.exists()) {
             showEnded("Der Raum wurde beendet.");
             return;
@@ -428,6 +470,7 @@
             statusEl.textContent = `Spieler ${data.winner} hat gewonnen! 🎉`;
           }
           rematchBtn.classList.remove("hidden");
+          scheduleRoomCleanup();
         } else {
           rematchBtn.classList.add("hidden");
           if (!data.playerO) {
@@ -493,29 +536,66 @@
       }
 
       rematchBtn.addEventListener("click", async () => {
+        if (cleanupTimer) {
+          clearTimeout(cleanupTimer);
+          cleanupTimer = null;
+        }
+
         const roomRef = ref(db, "rooms/" + currentRoomCode);
-        await update(roomRef, {
-          board: Array(9).fill(""),
-          turn: "X",
-          winner: null,
-        });
+        rematchBtn.disabled = true;
+        try {
+          const result = await runTransaction(roomRef, (data) => {
+            if (!data || data.status === "closed" || !data.winner) return;
+            data.board = Array(9).fill("");
+            data.turn = "X";
+            data.winner = null;
+            return data;
+          });
+          if (!result.committed) {
+            showEnded("Der Raum wurde bereits beendet.");
+          }
+        } catch (error) {
+          console.error("Neues Spiel konnte nicht gestartet werden:", error);
+          alert("Das neue Spiel konnte gerade nicht gestartet werden.");
+        } finally {
+          rematchBtn.disabled = false;
+        }
       });
 
       async function leaveRoom() {
-        if (!currentRoomCode) return;
+        if (!currentRoomCode || isLeavingRoom) return;
+        isLeavingRoom = true;
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        unsubscribeRoom?.();
         const roomRef = ref(db, "rooms/" + currentRoomCode);
         try {
-          await update(roomRef, {
-            status: "closed",
-            closedBy: myRole,
-          });
+          await remove(roomRef);
+          showEnded("Das Spiel wurde beendet.");
         } catch (error) {
           console.error("Spiel konnte nicht beendet werden:", error);
           alert("Das Spiel konnte gerade nicht beendet werden. Bitte erneut versuchen.");
+          isLeavingRoom = false;
         }
       }
 
+      function scheduleRoomCleanup() {
+        if (cleanupTimer || isLeavingRoom) return;
+        cleanupTimer = setTimeout(async () => {
+          cleanupTimer = null;
+          try {
+            await runTransaction(ref(db, "rooms/" + currentRoomCode), (data) => {
+              if (data?.winner) return null;
+              return;
+            });
+          } catch (error) {
+            console.error("Spielraum konnte nicht automatisch gelöscht werden:", error);
+          }
+        }, 5000);
+      }
+
       function showEnded(message) {
+        unsubscribeRoom?.();
+        unsubscribeRoom = null;
         waitingScreen.classList.add("hidden");
         gameScreen.classList.remove("hidden");
         boardEl.classList.add("hidden");

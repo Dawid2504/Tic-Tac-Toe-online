@@ -161,7 +161,14 @@
           margin: 1.5rem 0;
         "
       />
-      <input type="text" id="room-input" placeholder="Raum-Code eingeben..." />
+      <input
+        type="text"
+        id="room-input"
+        placeholder="Sechsstelligen Zahlencode eingeben..."
+        inputmode="numeric"
+        pattern="[0-9]{6}"
+        maxlength="6"
+      />
       <button class="btn btn-secondary" id="join-room-btn">
         Raum beitreten
       </button>
@@ -246,6 +253,14 @@
         Math.random().toString(36).substring(2, 9);
       sessionStorage.setItem("tic-tac-toe-player-id", myPlayerId);
 
+      function generateRoomCode() {
+        return String(Math.floor(100000 + Math.random() * 900000));
+      }
+
+      function isValidRoomCode(code) {
+        return /^\d{6}$/.test(code);
+      }
+
       const lobbyScreen = document.getElementById("lobby-screen");
       const gameScreen = document.getElementById("game-screen");
       const waitingScreen = document.getElementById("waiting-screen");
@@ -292,28 +307,29 @@
       window.addEventListener("DOMContentLoaded", () => {
         const urlParams = new URLSearchParams(window.location.search);
         const roomParam = urlParams.get("room");
-        if (roomParam) {
+        if (isValidRoomCode(roomParam)) {
           document.getElementById("room-input").value = roomParam;
-          joinRoom(roomParam.toUpperCase());
+          joinRoom(roomParam);
         }
       });
 
       document
         .getElementById("create-room-btn")
         .addEventListener("click", () => {
-          const roomCode = Math.random()
-            .toString(36)
-            .substring(2, 8)
-            .toUpperCase();
-          createAndJoinRoom(roomCode);
+          createAndJoinRoom(generateRoomCode());
         });
 
       document.getElementById("join-room-btn").addEventListener("click", () => {
         const code = document
           .getElementById("room-input")
           .value.trim()
-          .toUpperCase();
-        if (code) joinRoom(code);
+          .replace(/\D/g, "");
+        document.getElementById("room-input").value = code;
+        if (!isValidRoomCode(code)) {
+          alert("Bitte gib einen sechsstelligen Zahlencode ein.");
+          return;
+        }
+        joinRoom(code);
       });
 
       async function createAndJoinRoom(code) {
@@ -332,9 +348,7 @@
         });
 
         if (!result.committed) {
-          createAndJoinRoom(
-            Math.random().toString(36).substring(2, 8).toUpperCase(),
-          );
+          createAndJoinRoom(generateRoomCode());
           return;
         }
 

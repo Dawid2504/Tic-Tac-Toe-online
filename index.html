@@ -1,784 +1,362 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Online Tic Tac Toe</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap");
-
-      body {
-        font-family: "Outfit", sans-serif;
-        background: linear-gradient(
-          135deg,
-          #0b0f19 0%,
-          #111827 50%,
-          #1e1b4b 100%
-        );
-        min-height: 100vh;
-      }
-
-      .board-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: repeat(3, 1fr);
-        gap: 12px;
-      }
-
-      .cell {
-        aspect-ratio: 1;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-
-      .cell:hover:not(:disabled) {
-        transform: scale(1.04);
-        background-color: rgba(255, 255, 255, 0.12);
-      }
-
-      .cell:active:not(:disabled) {
-        transform: scale(0.96);
-      }
-
-      .glow-x {
-        text-shadow: 0 0 24px rgba(59, 130, 246, 0.7);
-        color: #60a5fa;
-      }
-
-      .glow-o {
-        text-shadow: 0 0 24px rgba(244, 63, 94, 0.7);
-        color: #fb7185;
-      }
-
-      .winning-cell {
-        animation: pulse-win 1s infinite alternate;
-      }
-
-      @keyframes pulse-win {
-        0% {
-          transform: scale(1);
-          filter: brightness(1);
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --accent-x: #38bdf8;
+            --accent-o: #f43f5e;
+            --border-color: #334155;
         }
-        100% {
-          transform: scale(1.06);
-          filter: brightness(1.4);
-        }
-      }
 
-      .glass-panel {
-        background: rgba(17, 24, 39, 0.75);
-        backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-      }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        h1 { margin-top: 0; font-size: 1.8rem; color: #f1f5f9; }
+
+        .btn {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+            margin: 0.5rem 0;
+            width: 100%;
+        }
+        .btn:hover { background-color: #2563eb; }
+        .btn-secondary { background-color: #475569; }
+        .btn-secondary:hover { background-color: #334155; }
+
+        input {
+            width: calc(100% - 1rem);
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            background: #0f172a;
+            color: white;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 1.5rem 0;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            background-color: #0f172a;
+            border: 2px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .cell:hover:not(.taken) { background-color: #1e293b; border-color: #64748b; }
+        .cell.x { color: var(--accent-x); }
+        .cell.o { color: var(--accent-o); }
+        .cell.taken { cursor: not-allowed; }
+
+        .hidden { display: none !important; }
+        #status { font-size: 1.1rem; margin-bottom: 1rem; font-weight: 500; }
+        .room-code-display { background: #0f172a; padding: 0.5px; border-radius: 4px; font-family: monospace; user-select: all; }
     </style>
-  </head>
-  <body
-    class="text-slate-100 flex flex-col justify-between items-center p-4 min-h-screen"
-  >
-    <!-- Header -->
-    <header class="w-full max-w-md my-4 text-center">
-      <h1
-        class="text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-rose-400"
-      >
-        TIC TAC TOE ONLINE
-      </h1>
-      <p class="text-slate-400 text-sm mt-1">Reines Online-Multiplayer Spiel</p>
-    </header>
+</head>
+<body>
 
-    <!-- Main Container -->
-    <main class="w-full max-w-md flex-1 flex flex-col justify-center">
-      <!-- Lobby Panel (Show when not in a room) -->
-      <div
-        id="lobby-panel"
-        class="glass-panel rounded-3xl p-6 shadow-2xl mb-6 space-y-5 border border-slate-800"
-      >
-        <h2 class="text-xl font-bold text-center text-slate-200">
-          Spiel-Lobby
-        </h2>
+    <div class="container" id="lobby-screen">
+        <h1>Tic Tac Toe Online</h1>
+        <p>Spiele in Echtzeit mit deinen Freunden über einen Link.</p>
+        <button class="btn" id="create-room-btn">Neuen Raum erstellen</button>
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
+        <input type="text" id="room-input" placeholder="Raum-Code eingeben...">
+        <button class="btn btn-secondary" id="join-room-btn">Raum beitreten</button>
+    </div>
 
-        <button
-          id="btn-create-room"
-          class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 text-base"
-        >
-          <i data-lucide="plus-circle" class="w-5 h-5"></i> Spiel Erstellen
-        </button>
-
-        <div class="relative flex py-1 items-center">
-          <div class="flex-grow border-t border-slate-700/60"></div>
-          <span
-            class="flex-shrink mx-3 text-xs text-slate-500 uppercase tracking-widest font-semibold"
-            >Oder Spiel Beitreten</span
-          >
-          <div class="flex-grow border-t border-slate-700/60"></div>
+    <div class="container hidden" id="game-screen">
+        <h1>Tic Tac Toe</h1>
+        <div id="status">Lade...</div>
+        <p style="font-size: 0.85rem; color: #94a3b8;">Raum-Code: <span id="display-code" class="room-code-display"></span></p>
+        
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
         </div>
 
-        <div class="flex gap-2">
-          <input
-            type="text"
-            id="input-room-code"
-            placeholder="6-STELLIGER CODE"
-            maxlength="6"
-            class="uppercase bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-3 text-center font-mono font-bold tracking-widest focus:outline-none focus:border-indigo-500 flex-1 text-slate-100 placeholder-slate-600 text-lg"
-          />
-          <button
-            id="btn-join-room"
-            class="bg-slate-800 hover:bg-slate-700 text-white font-semibold px-6 rounded-xl transition active:scale-95 flex items-center justify-center border border-slate-700"
-          >
-            Beitreten
-          </button>
-        </div>
-      </div>
+        <button class="btn btn-secondary hidden" id="rematch-btn">Neues Spiel</button>
+        <button class="btn btn-secondary" style="background-color: #dc2626; margin-top: 1rem;" onclick="location.reload()">Verlassen</button>
+    </div>
 
-      <!-- In-Game Area (Hidden initially until room joined) -->
-      <div id="game-area" class="hidden flex-col">
-        <!-- Room Info & Status Header -->
-        <div
-          class="glass-panel rounded-2xl p-4 mb-4 shadow-xl border border-slate-800 relative"
-        >
-          <div class="flex justify-between items-center mb-3">
-            <div>
-              <div
-                class="text-[10px] text-indigo-400 uppercase tracking-widest font-bold"
-              >
-                Raum Code
-              </div>
-              <div class="flex items-center gap-2">
-                <span
-                  id="display-room-code"
-                  class="text-2xl font-mono font-black tracking-widest text-white"
-                  >------</span
-                >
-                <button
-                  id="btn-copy-link"
-                  title="Einladungs-Link kopieren"
-                  class="p-1.5 hover:bg-indigo-900/50 rounded-lg text-indigo-300 transition"
-                >
-                  <i data-lucide="copy" class="w-4 h-4"></i>
-                </button>
-              </div>
-            </div>
-            <div class="text-right">
-              <div
-                id="player-role-badge"
-                class="text-xs inline-block px-3 py-1 bg-indigo-950/80 rounded-full text-indigo-300 border border-indigo-700/50 font-semibold"
-              >
-                Rolle: Verbinde...
-              </div>
-            </div>
-          </div>
-
-          <!-- Turn Banner -->
-          <div
-            id="status-display"
-            class="w-full py-2 rounded-xl glass-panel text-xs font-bold tracking-wider uppercase text-center border border-slate-700/60 text-slate-300"
-          >
-            Warte auf Mitspieler...
-          </div>
-
-          <button
-            id="btn-leave-room"
-            class="absolute -top-3 -right-3 p-2 bg-slate-800 hover:bg-rose-900/80 text-slate-400 hover:text-rose-200 transition rounded-full border border-slate-700 shadow-md"
-            title="Raum verlassen"
-          >
-            <i data-lucide="log-out" class="w-4 h-4"></i>
-          </button>
-        </div>
-
-        <!-- Score Bar -->
-        <div class="flex justify-between items-center mb-4 px-1 gap-3">
-          <div
-            id="card-player-x"
-            class="flex-1 glass-panel rounded-xl p-3 border-l-4 border-l-blue-500 text-center transition-all"
-          >
-            <div
-              class="text-xs text-slate-400 font-semibold flex items-center justify-center gap-1"
-            >
-              <span class="text-blue-400 font-extrabold text-base">X</span>
-              <span id="label-x">Spieler X</span>
-            </div>
-          </div>
-
-          <div
-            id="card-player-o"
-            class="flex-1 glass-panel rounded-xl p-3 border-r-4 border-r-rose-500 text-center transition-all"
-          >
-            <div
-              class="text-xs text-slate-400 font-semibold flex items-center justify-center gap-1"
-            >
-              <span id="label-o">Spieler O</span>
-              <span class="text-rose-400 font-extrabold text-base">O</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Game Grid Board -->
-        <div
-          class="glass-panel p-4 rounded-3xl shadow-2xl relative mb-6 border border-slate-800"
-        >
-          <div id="board" class="board-grid">
-            <!-- 9 Grid Buttons Generated via JS -->
-          </div>
-
-          <!-- Win / Draw Overlay -->
-          <div
-            id="game-overlay"
-            class="absolute inset-0 bg-slate-950/85 backdrop-blur-md rounded-3xl flex flex-col items-center justify-center hidden z-10 transition-all p-6 text-center"
-          >
-            <div
-              id="overlay-title"
-              class="text-3xl font-black mb-2 tracking-wide text-white"
-            >
-              SPIELER X GEWINNT!
-            </div>
-            <p id="overlay-subtitle" class="text-slate-400 text-sm mb-6">
-              Gut gespielt!
-            </p>
-            <button
-              id="btn-rematch"
-              class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold py-3.5 px-8 rounded-xl shadow-xl transform hover:-translate-y-0.5 transition active:scale-95 flex items-center gap-2 text-sm"
-            >
-              <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Nochmal Spielen
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Global Audio Control -->
-      <div class="flex justify-center">
-        <button
-          id="btn-toggle-sound"
-          class="text-xs text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5 bg-slate-900/50 px-3.5 py-1.5 rounded-lg border border-slate-800"
-        >
-          <i data-lucide="volume-2" id="icon-sound" class="w-3.5 h-3.5"></i>
-          Sound An
-        </button>
-      </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="mt-6 text-xs text-slate-600 text-center">
-      Online Tic Tac Toe • Statische Web-App
-    </footer>
-
-    <!-- Firebase SDK Modules -->
+    <!-- Firebase SDKs (Modular v10) -->
     <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-      import {
-        getFirestore,
-        doc,
-        setDoc,
-        onSnapshot,
-        updateDoc,
-      } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-      // Global environment fallback setup for static deployment
-      const appId =
-        typeof __app_id !== "undefined" ? __app_id : "tictactoe-online";
-      const firebaseConfig =
-        typeof __firebase_config !== "undefined"
-          ? JSON.parse(__firebase_config)
-          : {
-              apiKey: "AIzaSyD-demoKeyForStaticTicTacToe123",
-              authDomain: "tictactoe-demo.firebaseapp.com",
-              projectId: "tictactoe-demo-static",
-              storageBucket: "tictactoe-demo-static.appspot.com",
-              messagingSenderId: "123456789012",
-              appId: "1:123456789012:web:demo123456789",
+        // === TRAGE HIER DEINE ECHTEN FIREBASE-DATEN EIN ===
+        const firebaseConfig = {
+            apiKey: "DEINE_API_KEY_HIER_EINFUEGEN",
+            authDomain: "DEIN_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://DEIN_PROJECT_ID-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "DEIN_PROJECT_ID",
+            storageBucket: "DEIN_PROJECT_ID.appspot.com",
+            messagingSenderId: "DEINE_MESSAGING_SENDER_ID",
+            appId: "DEINE_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // App State
+        let currentRoomCode = null;
+        let myRole = null; 
+        const myPlayerId = Math.random().toString(36).substring(2, 9);
+
+        const lobbyScreen = document.getElementById('lobby-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const statusEl = document.getElementById('status');
+        const boardEl = document.getElementById('board');
+        const cells = document.querySelectorAll('.cell');
+        const displayCodeEl = document.getElementById('display-code');
+        const rematchBtn = document.getElementById('rematch-btn');
+
+        // Audio Generator (Web Audio API)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            if (type === 'click') {
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.08);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+            } else if (type === 'win') {
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+                osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+            }
+        }
+
+        // URL Check: Wenn ein Link mit ?room=CODE geöffnet wird
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomParam = urlParams.get('room');
+            if (roomParam) {
+                document.getElementById('room-input').value = roomParam;
+                joinRoom(roomParam.toUpperCase());
+            }
+        });
+
+        document.getElementById('create-room-btn').addEventListener('click', () => {
+            const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            createAndJoinRoom(roomCode);
+        });
+
+        document.getElementById('join-room-btn').addEventListener('click', () => {
+            const code = document.getElementById('room-input').value.trim().toUpperCase();
+            if (code) joinRoom(code);
+        });
+
+        async function createAndJoinRoom(code) {
+            const roomRef = ref(db, 'rooms/' + code);
+            const snapshot = await get(roomRef);
+            
+            if (snapshot.exists()) {
+                createAndJoinRoom(Math.random().toString(36).substring(2, 8).toUpperCase());
+                return;
+            }
+
+            const initialData = {
+                board: Array(9).fill(""),
+                turn: "X",
+                playerX: myPlayerId,
+                playerO: null,
+                winner: null
             };
 
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-
-      // App & Game State
-      let roomCode = null;
-      let myRole = null; // 'X', 'O', or 'SPECTATOR'
-      let soundEnabled = true;
-      let unsubscribeRoom = null;
-
-      let gameState = {
-        board: Array(9).fill(""),
-        turn: "X",
-        winner: null,
-        winningLine: [],
-        players: { X: false, O: false },
-      };
-
-      // Web Audio Synthesizer
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-      function playSound(type) {
-        if (!soundEnabled) return;
-        try {
-          if (audioCtx.state === "suspended") {
-            audioCtx.resume();
-          }
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-
-          const now = audioCtx.currentTime;
-
-          if (type === "move-x") {
-            osc.type = "sine";
-            osc.frequency.setValueAtTime(440, now);
-            osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
-            gain.gain.setValueAtTime(0.15, now);
-            gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
-            osc.start(now);
-            osc.stop(now + 0.08);
-          } else if (type === "move-o") {
-            osc.type = "triangle";
-            osc.frequency.setValueAtTime(330, now);
-            osc.frequency.exponentialRampToValueAtTime(220, now + 0.1);
-            gain.gain.setValueAtTime(0.2, now);
-            gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
-            osc.start(now);
-            osc.stop(now + 0.1);
-          } else if (type === "win") {
-            osc.type = "sine";
-            osc.frequency.setValueAtTime(523.25, now);
-            osc.frequency.setValueAtTime(659.25, now + 0.1);
-            osc.frequency.setValueAtTime(783.99, now + 0.2);
-            gain.gain.setValueAtTime(0.2, now);
-            gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
-            osc.start(now);
-            osc.stop(now + 0.4);
-          }
-        } catch (e) {
-          console.warn("Audio Error:", e);
-        }
-      }
-
-      // Winning Combination Verification
-      const WINNING_COMBOS = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [1, 4, 7],
-        [2, 5, 8],
-        [0, 4, 8],
-        [2, 4, 6],
-      ];
-
-      function checkWinner(board) {
-        for (let combo of WINNING_COMBOS) {
-          const [a, b, c] = combo;
-          if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-            return { winner: board[a], line: combo };
-          }
-        }
-        if (board.every((cell) => cell !== "")) {
-          return { winner: "DRAW", line: [] };
-        }
-        return null;
-      }
-
-      // UI Building
-      const boardElem = document.getElementById("board");
-
-      function initBoardUI() {
-        boardElem.innerHTML = "";
-        for (let i = 0; i < 9; i++) {
-          const btn = document.createElement("button");
-          btn.className =
-            "cell glass-panel rounded-2xl text-4xl sm:text-5xl font-black flex items-center justify-center border border-slate-700/60 shadow-inner hover:bg-slate-800/50";
-          btn.dataset.index = i;
-          btn.addEventListener("click", () => handleCellClick(i));
-          boardElem.appendChild(btn);
-        }
-        lucide.createIcons();
-      }
-
-      function updateBoardUI() {
-        const cells = boardElem.children;
-        for (let i = 0; i < 9; i++) {
-          const val = gameState.board[i];
-          const btn = cells[i];
-
-          btn.classList.remove("winning-cell", "glow-x", "glow-o");
-
-          if (val === "X") {
-            btn.innerHTML = "X";
-            btn.classList.add("glow-x");
-          } else if (val === "O") {
-            btn.innerHTML = "O";
-            btn.classList.add("glow-o");
-          } else {
-            btn.innerHTML = "";
-          }
-
-          if (gameState.winningLine && gameState.winningLine.includes(i)) {
-            btn.classList.add("winning-cell");
-          }
-
-          const isMyTurn =
-            gameState.turn === myRole &&
-            (myRole === "X" || myRole === "O") &&
-            gameState.players.O;
-          btn.disabled = !!val || gameState.winner !== null || !isMyTurn;
+            await set(roomRef, initialData);
+            enterRoom(code, 'X');
         }
 
-        // Status Banner Logic
-        const statusDisplay = document.getElementById("status-display");
-        if (!gameState.players.O) {
-          statusDisplay.textContent = "Warte auf Mitspieler (O)...";
-          statusDisplay.className =
-            "w-full py-2 rounded-xl bg-amber-500/10 text-amber-300 text-xs font-bold border border-amber-500/30 text-center animate-pulse";
-        } else if (gameState.winner) {
-          if (gameState.winner === "DRAW") {
-            statusDisplay.textContent = "Unentschieden!";
-            statusDisplay.className =
-              "w-full py-2 rounded-xl bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30 text-center";
-          } else {
-            statusDisplay.textContent = `Spieler ${gameState.winner} gewinnt!`;
-            statusDisplay.className =
-              gameState.winner === "X"
-                ? "w-full py-2 rounded-xl bg-blue-500/20 text-blue-300 text-xs font-bold border border-blue-500/30 text-center"
-                : "w-full py-2 rounded-xl bg-rose-500/20 text-rose-300 text-xs font-bold border border-rose-500/30 text-center";
-          }
-        } else {
-          if (myRole === "SPECTATOR") {
-            statusDisplay.textContent = `Am Zug: Spieler ${gameState.turn}`;
-            statusDisplay.className =
-              "w-full py-2 rounded-xl glass-panel text-xs font-bold text-slate-300 border border-slate-700 text-center";
-          } else if (gameState.turn === myRole) {
-            statusDisplay.textContent = `Du bist am Zug (${myRole})`;
-            statusDisplay.className =
-              "w-full py-2 rounded-xl bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30 text-center";
-          } else {
-            statusDisplay.textContent = `Gegner am Zug (${gameState.turn})`;
-            statusDisplay.className =
-              "w-full py-2 rounded-xl glass-panel text-xs font-bold text-slate-400 border border-slate-700 text-center";
-          }
-        }
+        async function joinRoom(code) {
+            const roomRef = ref(db, 'rooms/' + code);
+            const snapshot = await get(roomRef);
 
-        // Score Card Turn Glow
-        const cardX = document.getElementById("card-player-x");
-        const cardO = document.getElementById("card-player-o");
-
-        if (
-          gameState.turn === "X" &&
-          !gameState.winner &&
-          gameState.players.O
-        ) {
-          cardX.classList.add("ring-2", "ring-blue-500/50", "bg-blue-950/20");
-          cardO.classList.remove(
-            "ring-2",
-            "ring-rose-500/50",
-            "bg-rose-950/20",
-          );
-        } else if (
-          gameState.turn === "O" &&
-          !gameState.winner &&
-          gameState.players.O
-        ) {
-          cardO.classList.add("ring-2", "ring-rose-500/50", "bg-rose-950/20");
-          cardX.classList.remove(
-            "ring-2",
-            "ring-blue-500/50",
-            "bg-blue-950/20",
-          );
-        } else {
-          cardX.classList.remove(
-            "ring-2",
-            "ring-blue-500/50",
-            "bg-blue-950/20",
-          );
-          cardO.classList.remove(
-            "ring-2",
-            "ring-rose-500/50",
-            "bg-rose-950/20",
-          );
-        }
-
-        // End Game Overlay
-        const overlay = document.getElementById("game-overlay");
-        const overlayTitle = document.getElementById("overlay-title");
-        const overlaySubtitle = document.getElementById("overlay-subtitle");
-
-        if (gameState.winner) {
-          overlay.classList.remove("hidden");
-          if (gameState.winner === "DRAW") {
-            overlayTitle.textContent = "UNENTSCHIEDEN!";
-            overlayTitle.className =
-              "text-3xl font-black mb-2 tracking-wide text-amber-400";
-            overlaySubtitle.textContent =
-              "Niemand konnte das Spiel entscheiden.";
-          } else {
-            overlayTitle.textContent = `SPIELER ${gameState.winner} GEWINNT!`;
-            overlayTitle.className =
-              gameState.winner === "X"
-                ? "text-3xl font-black mb-2 tracking-wide text-blue-400 glow-x"
-                : "text-3xl font-black mb-2 tracking-wide text-rose-400 glow-o";
-
-            if (myRole === "SPECTATOR") {
-              overlaySubtitle.textContent = `Spieler ${gameState.winner} hat die Runde gewonnen.`;
-            } else {
-              overlaySubtitle.textContent =
-                myRole === gameState.winner
-                  ? "Sieg! Ausgezeichnet gespielt."
-                  : "Niederlage! Revanche gefällig?";
-            }
-          }
-        } else {
-          overlay.classList.add("hidden");
-        }
-      }
-
-      // Cell Selection Handler
-      async function handleCellClick(index) {
-        if (
-          gameState.board[index] !== "" ||
-          gameState.winner ||
-          !gameState.players.O
-        )
-          return;
-        if (gameState.turn !== myRole || myRole === "SPECTATOR") return;
-
-        const newBoard = [...gameState.board];
-        newBoard[index] = myRole;
-
-        const result = checkWinner(newBoard);
-        const nextTurn = myRole === "X" ? "O" : "X";
-
-        playSound(myRole === "X" ? "move-x" : "move-o");
-
-        const roomRef = doc(
-          db,
-          "artifacts",
-          appId,
-          "public",
-          "data",
-          "rooms",
-          roomCode,
-        );
-
-        let updateData = {
-          board: newBoard,
-          turn: nextTurn,
-        };
-
-        if (result) {
-          updateData.winner = result.winner;
-          updateData.winningLine = result.line;
-          playSound(result.winner !== "DRAW" ? "win" : "move-x");
-        }
-
-        await updateDoc(roomRef, updateData);
-      }
-
-      // Room Code Generator
-      function generateRoomCode() {
-        return Math.floor(100000 + Math.random() * 900000).toString();
-      }
-
-      // Online Room Actions
-      async function createRoom() {
-        const code = generateRoomCode();
-        roomCode = code;
-        myRole = "X";
-
-        const roomRef = doc(
-          db,
-          "artifacts",
-          appId,
-          "public",
-          "data",
-          "rooms",
-          roomCode,
-        );
-        const initialRoomData = {
-          board: Array(9).fill(""),
-          turn: "X",
-          winner: null,
-          winningLine: [],
-          createdAt: Date.now(),
-          players: { X: true, O: false },
-        };
-
-        await setDoc(roomRef, initialRoomData);
-        setURLRoomCode(code);
-        subscribeToRoom(code);
-      }
-
-      async function joinRoom(code) {
-        code = code.trim().toUpperCase();
-        if (code.length !== 6) {
-          alert("Bitte einen gültigen 6-stelligen Raum-Code eingeben.");
-          return;
-        }
-
-        roomCode = code;
-        setURLRoomCode(code);
-        subscribeToRoom(code);
-      }
-
-      function subscribeToRoom(code) {
-        if (unsubscribeRoom) unsubscribeRoom();
-
-        const roomRef = doc(
-          db,
-          "artifacts",
-          appId,
-          "public",
-          "data",
-          "rooms",
-          code,
-        );
-
-        unsubscribeRoom = onSnapshot(
-          roomRef,
-          (snapshot) => {
             if (!snapshot.exists()) {
-              alert("Der Raum wurde nicht gefunden oder existiert nicht mehr.");
-              leaveRoom();
-              return;
+                alert("Raum nicht gefunden!");
+                return;
             }
 
-            const data = snapshot.data();
+            const data = snapshot.val();
+            let role = 'spectator';
 
-            // Assign role if joining an existing room
-            if (!myRole) {
-              if (!data.players.O) {
-                myRole = "O";
-                updateDoc(roomRef, { "players.O": true });
-              } else {
-                myRole = "SPECTATOR";
-              }
+            if (data.playerX === myPlayerId) {
+                role = 'X';
+            } else if (data.playerO === myPlayerId) {
+                role = 'O';
+            } else if (!data.playerX) {
+                await update(roomRef, { playerX: myPlayerId });
+                role = 'X';
+            } else if (!data.playerO) {
+                await update(roomRef, { playerO: myPlayerId });
+                role = 'O';
             }
 
-            gameState = {
-              board: data.board,
-              turn: data.turn,
-              winner: data.winner,
-              winningLine: data.winningLine || [],
-              players: data.players,
-            };
-
-            showInGameUI(code);
-            updateBoardUI();
-          },
-          (error) => {
-            console.error("Firestore Error:", error);
-          },
-        );
-      }
-
-      function leaveRoom() {
-        if (unsubscribeRoom) unsubscribeRoom();
-        unsubscribeRoom = null;
-        roomCode = null;
-        myRole = null;
-
-        // Clear URL Parameter
-        const url = new URL(window.location);
-        url.searchParams.delete("room");
-        window.history.pushState({}, "", url);
-
-        document.getElementById("lobby-panel").classList.remove("hidden");
-        document.getElementById("game-area").classList.add("hidden");
-        document.getElementById("game-area").classList.remove("flex");
-      }
-
-      function showInGameUI(code) {
-        document.getElementById("lobby-panel").classList.add("hidden");
-        document.getElementById("game-area").classList.remove("hidden");
-        document.getElementById("game-area").classList.add("flex");
-        document.getElementById("display-room-code").textContent = code;
-
-        let roleText = "Zuschauer";
-        if (myRole === "X") roleText = "Du bist X";
-        if (myRole === "O") roleText = "Du bist O";
-
-        document.getElementById("player-role-badge").textContent = roleText;
-        document.getElementById("label-x").textContent =
-          myRole === "X" ? "Du (X)" : "Spieler X";
-        document.getElementById("label-o").textContent =
-          myRole === "O" ? "Du (O)" : "Spieler O";
-      }
-
-      function setURLRoomCode(code) {
-        const url = new URL(window.location);
-        url.searchParams.set("room", code);
-        window.history.pushState({}, "", url);
-      }
-
-      async function triggerRematch() {
-        if (!roomCode) return;
-        const roomRef = doc(
-          db,
-          "artifacts",
-          appId,
-          "public",
-          "data",
-          "rooms",
-          roomCode,
-        );
-        await updateDoc(roomRef, {
-          board: Array(9).fill(""),
-          turn: "X",
-          winner: null,
-          winningLine: [],
-        });
-      }
-
-      // Event Listeners
-      document
-        .getElementById("btn-create-room")
-        .addEventListener("click", createRoom);
-      document.getElementById("btn-join-room").addEventListener("click", () => {
-        const input = document.getElementById("input-room-code");
-        if (input.value) joinRoom(input.value);
-      });
-
-      document
-        .getElementById("btn-leave-room")
-        .addEventListener("click", leaveRoom);
-      document
-        .getElementById("btn-rematch")
-        .addEventListener("click", triggerRematch);
-
-      document.getElementById("btn-copy-link").addEventListener("click", () => {
-        const fullUrl = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
-        const tempInput = document.createElement("input");
-        tempInput.value = fullUrl;
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand("copy");
-        document.body.removeChild(tempInput);
-        alert("Einladungs-Link kopiert! Sende ihn an deine Freunde.");
-      });
-
-      document
-        .getElementById("btn-toggle-sound")
-        .addEventListener("click", () => {
-          soundEnabled = !soundEnabled;
-          const soundBtnText = document.getElementById("btn-toggle-sound");
-          soundBtnText.innerHTML = soundEnabled
-            ? `<i data-lucide="volume-2" class="w-3.5 h-3.5"></i> Sound An`
-            : `<i data-lucide="volume-x" class="w-3.5 h-3.5"></i> Sound Aus`;
-          lucide.createIcons();
-        });
-
-      // Initialize & Check URL Search Params
-      window.addEventListener("load", () => {
-        initBoardUI();
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const roomParam = urlParams.get("room");
-
-        if (roomParam && roomParam.trim().length === 6) {
-          document.getElementById("input-room-code").value = roomParam
-            .trim()
-            .toUpperCase();
-          joinRoom(roomParam.trim());
+            enterRoom(code, role);
         }
-      });
+
+        function enterRoom(code, role) {
+            currentRoomCode = code;
+            myRole = role;
+            lobbyScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            displayCodeEl.textContent = code;
+
+            const newUrl = `${window.location.pathname}?room=${code}`;
+            window.history.pushState({path: newUrl}, '', newUrl);
+
+            listenToRoom();
+        }
+
+        function listenToRoom() {
+            const roomRef = ref(db, 'rooms/' + currentRoomCode);
+            onValue(roomRef, (snapshot) => {
+                if (!snapshot.exists()) return;
+                const data = snapshot.val();
+                updateUI(data);
+            });
+        }
+
+        function updateUI(data) {
+            cells.forEach((cell, index) => {
+                const val = data.board[index];
+                cell.textContent = val;
+                cell.className = 'cell';
+                if (val === 'X') cell.classList.add('x', 'taken');
+                if (val === 'O') cell.classList.add('o', 'taken');
+            });
+
+            if (data.winner) {
+                if (data.winner === 'draw') {
+                    statusEl.textContent = "Unentschieden!";
+                } else {
+                    statusEl.textContent = `Spieler ${data.winner} hat gewonnen! 🎉`;
+                }
+                rematchBtn.classList.remove('hidden');
+            } else {
+                rematchBtn.classList.add('hidden');
+                if (!data.playerO) {
+                    statusEl.textContent = "Warte auf Mitspieler...";
+                } else if (data.turn === myRole) {
+                    statusEl.textContent = "Du bist am Zug!";
+                } else {
+                    statusEl.textContent = `Gegner ist am Zug (${data.turn})...`;
+                }
+            }
+        }
+
+        cells.forEach(cell => {
+            cell.addEventListener('click', async () => {
+                if (myRole === 'spectator') return;
+                const index = parseInt(cell.dataset.index);
+
+                const roomRef = ref(db, 'rooms/' + currentRoomCode);
+                const snapshot =val = await get(roomRef);
+                const data = snapshot.val();
+
+                if (data.winner || data.board[index] !== "" || data.turn !== myRole || !data.playerO) {
+                    return;
+                }
+
+                data.board[index] = myRole;
+                playSound('click');
+
+                const winner = checkWinner(data.board);
+                if (winner) {
+                    data.winner = winner;
+                    playSound('win');
+                } else {
+                    data.turn = myRole === 'X' ? 'O' : 'X';
+                }
+
+                await set(roomRef, data);
+            });
+        });
+
+        function checkWinner(board) {
+            const lines = [
+                [0,1,2], [3,4,5], [6,7,8],
+                [0,3,6], [1,4,7], [2,5,8],
+                [0,4,8], [2,4,6]
+            ];
+            for (let line of lines) {
+                const [a, b, c] = line;
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    return board[a];
+                }
+            }
+            if (board.every(cell => cell !== "")) return 'draw';
+            return null;
+        }
+
+        rematchBtn.addEventListener('click', async () => {
+            const roomRef = ref(db, 'rooms/' + currentRoomCode);
+            await update(roomRef, {
+                board: Array(9).fill(""),
+                turn: "X",
+                winner: null
+            });
+        });
     </script>
-  </body>
+</body>
 </html>

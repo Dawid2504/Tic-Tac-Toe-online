@@ -60,7 +60,6 @@
         position: relative;
       }
 
-      /* Dekorative Hintergrund-Orbs */
       body::before,
       body::after {
         content: "";
@@ -199,19 +198,22 @@
         border: 1px solid var(--border-color);
         background: rgba(15, 23, 42, 0.65);
         color: white;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 1.05rem;
+        font-family: inherit;
+        font-size: 1rem;
         text-align: center;
-        letter-spacing: 0.3em;
         transition:
           border-color 0.18s ease,
           box-shadow 0.18s ease,
           background 0.18s ease;
       }
+      input.code-input {
+        font-family: "JetBrains Mono", monospace;
+        letter-spacing: 0.3em;
+        font-size: 1.05rem;
+      }
       input::placeholder {
         color: #64748b;
-        letter-spacing: 0.05em;
-        font-family: "Outfit", sans-serif;
+        letter-spacing: 0.02em;
       }
       input:focus {
         outline: none;
@@ -231,8 +233,7 @@
           transparent,
           var(--border-color),
           transparent
-        ) !important;
-        border-top: none !important;
+        );
       }
 
       .board {
@@ -305,6 +306,38 @@
         color: #e2e8f0;
         min-height: 1.5em;
         letter-spacing: 0.01em;
+        transition:
+          font-size 0.35s ease,
+          padding 0.35s ease;
+      }
+
+      #status.winner-display {
+        font-size: 2rem;
+        font-weight: 800;
+        padding: 1.25rem 0.5rem;
+        line-height: 1.3;
+        background: linear-gradient(
+          135deg,
+          #22d3ee 0%,
+          #a5b4fc 50%,
+          #f472b6 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+        animation: winner-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      @keyframes winner-pop {
+        from {
+          transform: scale(0.7);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
       }
 
       .room-code-display {
@@ -340,7 +373,50 @@
         }
       }
 
-      /* Unterstreichung für Sekundär-Buttons wie "Verlassen" */
+      .players-info {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        margin: 0.25rem 0 0.75rem;
+        font-size: 0.9rem;
+        flex-wrap: wrap;
+      }
+
+      .player-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 0.5rem;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--border-color);
+        font-weight: 600;
+        max-width: 140px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .player-badge.x {
+        color: var(--accent-x);
+        border-color: rgba(34, 211, 238, 0.3);
+      }
+      .player-badge.o {
+        color: var(--accent-o);
+        border-color: rgba(244, 114, 182, 0.3);
+      }
+      .player-badge.you::after {
+        content: " (Du)";
+        opacity: 0.65;
+        font-weight: 500;
+        font-size: 0.8em;
+      }
+
+      .vs {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
       #leave-game-btn {
         background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
         box-shadow:
@@ -355,7 +431,6 @@
           inset 0 1px 0 rgba(255, 255, 255, 0.15);
       }
 
-      /* Sanfte Fade-Animation für Screens */
       #game-screen,
       #waiting-screen {
         animation: fade-in 0.35s ease;
@@ -376,21 +451,24 @@
     <div class="container" id="lobby-screen">
       <h1>Tic Tac Toe Online</h1>
       <p>Spiele in Echtzeit mit deinen Freunden über einen Link.</p>
-      <button class="btn" id="create-room-btn">Neuen Raum erstellen</button>
-      <hr
-        style="
-          border: 0;
-          border-top: 1px solid var(--border-color);
-          margin: 1.5rem 0;
-        "
+      <input
+        type="text"
+        id="name-input"
+        placeholder="Dein Name..."
+        maxlength="16"
+        autocomplete="off"
       />
+      <button class="btn" id="create-room-btn">Neuen Raum erstellen</button>
+      <hr />
       <input
         type="text"
         id="room-input"
+        class="code-input"
         placeholder="Sechsstelligen Zahlencode eingeben..."
         inputmode="numeric"
         pattern="[0-9]{6}"
         maxlength="6"
+        autocomplete="off"
       />
       <button class="btn btn-secondary" id="join-room-btn">
         Raum beitreten
@@ -399,6 +477,11 @@
 
     <div class="container hidden" id="game-screen">
       <h1>Tic Tac Toe</h1>
+      <div class="players-info">
+        <span class="player-badge x" id="player-x-badge">Spieler X</span>
+        <span class="vs">vs</span>
+        <span class="player-badge o" id="player-o-badge">Spieler O</span>
+      </div>
       <div id="status">Lade...</div>
       <p style="font-size: 0.85rem; color: var(--text-muted)">
         Raum-Code: <span id="display-code" class="room-code-display"></span>
@@ -419,18 +502,13 @@
       <button class="btn btn-secondary hidden" id="rematch-btn">
         Neues Spiel
       </button>
-      <button
-        class="btn btn-secondary"
-        style="background-color: #dc2626; margin-top: 1rem"
-        id="leave-game-btn"
-      >
-        Verlassen
-      </button>
+      <button class="btn btn-secondary" id="leave-game-btn">Verlassen</button>
     </div>
 
     <div class="container hidden" id="waiting-screen">
       <h1>Warte auf Mitspieler</h1>
       <div class="waiting-spinner" aria-hidden="true"></div>
+      <p>Du spielst als <strong id="waiting-name">Spieler</strong></p>
       <p>
         Der Raum ist bereit. Sobald der zweite Spieler beitritt, kann das Spiel
         beginnen.
@@ -451,6 +529,7 @@
         onValue,
         remove,
         runTransaction,
+        onDisconnect,
       } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
       // === TRAGE HIER DEINE ECHTEN FIREBASE-DATEN EIN ===
@@ -479,6 +558,9 @@
         Math.random().toString(36).substring(2, 9);
       sessionStorage.setItem("tic-tac-toe-player-id", myPlayerId);
 
+      let myName =
+        sessionStorage.getItem("tic-tac-toe-player-name") || "";
+
       function generateRoomCode() {
         return String(Math.floor(100000 + Math.random() * 900000));
       }
@@ -495,9 +577,16 @@
       const cells = document.querySelectorAll(".cell");
       const displayCodeEl = document.getElementById("display-code");
       const waitingCodeEl = document.getElementById("waiting-code");
+      const waitingNameEl = document.getElementById("waiting-name");
       const rematchBtn = document.getElementById("rematch-btn");
       const leaveGameBtn = document.getElementById("leave-game-btn");
       const leaveWaitingBtn = document.getElementById("leave-waiting-btn");
+      const nameInput = document.getElementById("name-input");
+      const roomInput = document.getElementById("room-input");
+      const playerXBadge = document.getElementById("player-x-badge");
+      const playerOBadge = document.getElementById("player-o-badge");
+
+      nameInput.value = myName;
 
       // Audio Generator (Web Audio API)
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -534,27 +623,45 @@
         const urlParams = new URLSearchParams(window.location.search);
         const roomParam = urlParams.get("room");
         if (isValidRoomCode(roomParam)) {
-          document.getElementById("room-input").value = roomParam;
-          joinRoom(roomParam);
+          roomInput.value = roomParam;
+          if (myName) {
+            joinRoom(roomParam);
+          } else {
+            // Kein Name vorhanden → Nutzer muss erst Namen eingeben.
+            nameInput.focus();
+          }
         }
       });
 
       document
         .getElementById("create-room-btn")
         .addEventListener("click", () => {
+          const name = nameInput.value.trim();
+          if (!name) {
+            alert("Bitte gib zuerst deinen Namen ein.");
+            nameInput.focus();
+            return;
+          }
+          myName = name;
+          sessionStorage.setItem("tic-tac-toe-player-name", name);
           createAndJoinRoom(generateRoomCode());
         });
 
       document.getElementById("join-room-btn").addEventListener("click", () => {
-        const code = document
-          .getElementById("room-input")
-          .value.trim()
-          .replace(/\D/g, "");
-        document.getElementById("room-input").value = code;
+        const name = nameInput.value.trim();
+        if (!name) {
+          alert("Bitte gib zuerst deinen Namen ein.");
+          nameInput.focus();
+          return;
+        }
+        const code = roomInput.value.trim().replace(/\D/g, "");
+        roomInput.value = code;
         if (!isValidRoomCode(code)) {
           alert("Bitte gib einen sechsstelligen Zahlencode ein.");
           return;
         }
+        myName = name;
+        sessionStorage.setItem("tic-tac-toe-player-name", name);
         joinRoom(code);
       });
 
@@ -564,7 +671,9 @@
           board: Array(9).fill(""),
           turn: "X",
           playerX: myPlayerId,
+          playerXName: myName,
           playerO: null,
+          playerOName: null,
           winner: null,
         };
 
@@ -621,9 +730,13 @@
             if (data.playerX === myPlayerId || data.playerO === myPlayerId) {
               return data;
             }
-            if (!data.playerX) data.playerX = myPlayerId;
-            else if (!data.playerO) data.playerO = myPlayerId;
-            else return;
+            if (!data.playerX) {
+              data.playerX = myPlayerId;
+              data.playerXName = myName;
+            } else if (!data.playerO) {
+              data.playerO = myPlayerId;
+              data.playerOName = myName;
+            } else return;
             return data;
           });
         } catch (error) {
@@ -660,9 +773,15 @@
         waitingScreen.classList.remove("hidden");
         displayCodeEl.textContent = code;
         waitingCodeEl.textContent = code;
+        waitingNameEl.textContent = myName || "Spieler";
 
         const newUrl = `${window.location.pathname}?room=${code}`;
         window.history.pushState({ path: newUrl }, "", newUrl);
+
+        // 🔥 NEU: Wenn dieser Client die Verbindung verliert
+        // (Tab geschlossen, Browser-Crash, WLAN weg), löscht
+        // Firebase den Raum serverseitig automatisch.
+        onDisconnect(ref(db, "rooms/" + code)).remove();
 
         listenToRoom();
       }
@@ -680,6 +799,11 @@
         });
       }
 
+      function getPlayerName(data, role) {
+        if (role === "X") return data.playerXName || "Spieler X";
+        return data.playerOName || "Spieler O";
+      }
+
       function updateUI(data) {
         if (data.status === "closed") {
           showEnded(
@@ -693,7 +817,19 @@
         const hasOpponent = Boolean(data.playerX && data.playerO);
         waitingScreen.classList.toggle("hidden", hasOpponent);
         gameScreen.classList.toggle("hidden", !hasOpponent);
-        if (!hasOpponent) return;
+        if (!hasOpponent) {
+          // Falls wir im Waiting-Screen sind, Namen aktualisieren
+          if (data.playerXName) {
+            waitingNameEl.textContent = data.playerXName;
+          }
+          return;
+        }
+
+        // Spielernamen-Badges aktualisieren
+        playerXBadge.textContent = getPlayerName(data, "X");
+        playerOBadge.textContent = getPlayerName(data, "O");
+        playerXBadge.classList.toggle("you", myRole === "X");
+        playerOBadge.classList.toggle("you", myRole === "O");
 
         cells.forEach((cell, index) => {
           const val = data.board?.[index] || "";
@@ -704,21 +840,35 @@
         });
 
         if (data.winner) {
-          if (data.winner === "draw") {
-            statusEl.textContent = "Unentschieden!";
-          } else {
-            statusEl.textContent = `Spieler ${data.winner} hat gewonnen! 🎉`;
-          }
+          // Board ausblenden, großen Gewinner-Text anzeigen
+          boardEl.classList.add("hidden");
           rematchBtn.classList.remove("hidden");
+          statusEl.classList.add("winner-display");
+
+          if (data.winner === "draw") {
+            statusEl.textContent = "Unentschieden! 🤝";
+          } else if (data.winner === myRole) {
+            statusEl.textContent = `Du hast gewonnen, ${myName}! 🎉`;
+          } else {
+            const winnerName = getPlayerName(data, data.winner);
+            statusEl.textContent = `${winnerName} hat gewonnen! 🎉`;
+          }
           scheduleRoomCleanup();
         } else {
+          boardEl.classList.remove("hidden");
           rematchBtn.classList.add("hidden");
+          statusEl.classList.remove("winner-display");
+
           if (!data.playerO) {
             statusEl.textContent = "Warte auf Mitspieler...";
           } else if (data.turn === myRole) {
             statusEl.textContent = "Du bist am Zug!";
           } else {
-            statusEl.textContent = `Gegner ist am Zug (${data.turn})...`;
+            const oppName = getPlayerName(
+              data,
+              data.turn === "X" ? "X" : "O",
+            );
+            statusEl.textContent = `${oppName} ist am Zug...`;
           }
         }
       }
@@ -845,6 +995,7 @@
         gameScreen.classList.remove("hidden");
         boardEl.classList.add("hidden");
         rematchBtn.classList.add("hidden");
+        statusEl.classList.remove("winner-display");
         statusEl.textContent = message;
         leaveGameBtn.textContent = "Zurück zur Lobby";
         leaveGameBtn.onclick = () =>

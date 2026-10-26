@@ -1,362 +1,447 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Online Tic Tac Toe</title>
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-color: #f8fafc;
-            --accent-x: #38bdf8;
-            --accent-o: #f43f5e;
-            --border-color: #334155;
-        }
+      :root {
+        --bg-color: #0f172a;
+        --card-bg: #1e293b;
+        --text-color: #f8fafc;
+        --accent-x: #38bdf8;
+        --accent-o: #f43f5e;
+        --border-color: #334155;
+      }
 
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
+      body {
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
 
-        .container {
-            background-color: var(--card-bg);
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
+      .container {
+        background-color: var(--card-bg);
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+      }
 
-        h1 { margin-top: 0; font-size: 1.8rem; color: #f1f5f9; }
+      h1 {
+        margin-top: 0;
+        font-size: 1.8rem;
+        color: #f1f5f9;
+      }
 
-        .btn {
-            background-color: #3b82f6;
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            font-size: 1rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background 0.2s;
-            margin: 0.5rem 0;
-            width: 100%;
-        }
-        .btn:hover { background-color: #2563eb; }
-        .btn-secondary { background-color: #475569; }
-        .btn-secondary:hover { background-color: #334155; }
+      .btn {
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.2s;
+        margin: 0.5rem 0;
+        width: 100%;
+      }
+      .btn:hover {
+        background-color: #2563eb;
+      }
+      .btn-secondary {
+        background-color: #475569;
+      }
+      .btn-secondary:hover {
+        background-color: #334155;
+      }
 
-        input {
-            width: calc(100% - 1rem);
-            padding: 0.75rem;
-            margin: 0.5rem 0;
-            border-radius: 0.5rem;
-            border: 1px solid var(--border-color);
-            background: #0f172a;
-            color: white;
-            font-size: 1rem;
-            text-align: center;
-        }
+      input {
+        width: calc(100% - 1rem);
+        padding: 0.75rem;
+        margin: 0.5rem 0;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-color);
+        background: #0f172a;
+        color: white;
+        font-size: 1rem;
+        text-align: center;
+      }
 
-        .board {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 1.5rem 0;
-        }
+      .board {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin: 1.5rem 0;
+      }
 
-        .cell {
-            aspect-ratio: 1;
-            background-color: #0f172a;
-            border: 2px solid var(--border-color);
-            border-radius: 0.5rem;
-            font-size: 2.5rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
+      .cell {
+        aspect-ratio: 1;
+        background-color: #0f172a;
+        border: 2px solid var(--border-color);
+        border-radius: 0.5rem;
+        font-size: 2.5rem;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
 
-        .cell:hover:not(.taken) { background-color: #1e293b; border-color: #64748b; }
-        .cell.x { color: var(--accent-x); }
-        .cell.o { color: var(--accent-o); }
-        .cell.taken { cursor: not-allowed; }
+      .cell:hover:not(.taken) {
+        background-color: #1e293b;
+        border-color: #64748b;
+      }
+      .cell.x {
+        color: var(--accent-x);
+      }
+      .cell.o {
+        color: var(--accent-o);
+      }
+      .cell.taken {
+        cursor: not-allowed;
+      }
 
-        .hidden { display: none !important; }
-        #status { font-size: 1.1rem; margin-bottom: 1rem; font-weight: 500; }
-        .room-code-display { background: #0f172a; padding: 0.5px; border-radius: 4px; font-family: monospace; user-select: all; }
+      .hidden {
+        display: none !important;
+      }
+      #status {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        font-weight: 500;
+      }
+      .room-code-display {
+        background: #0f172a;
+        padding: 0.5px;
+        border-radius: 4px;
+        font-family: monospace;
+        user-select: all;
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <div class="container" id="lobby-screen">
-        <h1>Tic Tac Toe Online</h1>
-        <p>Spiele in Echtzeit mit deinen Freunden über einen Link.</p>
-        <button class="btn" id="create-room-btn">Neuen Raum erstellen</button>
-        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
-        <input type="text" id="room-input" placeholder="Raum-Code eingeben...">
-        <button class="btn btn-secondary" id="join-room-btn">Raum beitreten</button>
+      <h1>Tic Tac Toe Online</h1>
+      <p>Spiele in Echtzeit mit deinen Freunden über einen Link.</p>
+      <button class="btn" id="create-room-btn">Neuen Raum erstellen</button>
+      <hr
+        style="
+          border: 0;
+          border-top: 1px solid var(--border-color);
+          margin: 1.5rem 0;
+        "
+      />
+      <input type="text" id="room-input" placeholder="Raum-Code eingeben..." />
+      <button class="btn btn-secondary" id="join-room-btn">
+        Raum beitreten
+      </button>
     </div>
 
     <div class="container hidden" id="game-screen">
-        <h1>Tic Tac Toe</h1>
-        <div id="status">Lade...</div>
-        <p style="font-size: 0.85rem; color: #94a3b8;">Raum-Code: <span id="display-code" class="room-code-display"></span></p>
-        
-        <div class="board" id="board">
-            <div class="cell" data-index="0"></div>
-            <div class="cell" data-index="1"></div>
-            <div class="cell" data-index="2"></div>
-            <div class="cell" data-index="3"></div>
-            <div class="cell" data-index="4"></div>
-            <div class="cell" data-index="5"></div>
-            <div class="cell" data-index="6"></div>
-            <div class="cell" data-index="7"></div>
-            <div class="cell" data-index="8"></div>
-        </div>
+      <h1>Tic Tac Toe</h1>
+      <div id="status">Lade...</div>
+      <p style="font-size: 0.85rem; color: #94a3b8">
+        Raum-Code: <span id="display-code" class="room-code-display"></span>
+      </p>
 
-        <button class="btn btn-secondary hidden" id="rematch-btn">Neues Spiel</button>
-        <button class="btn btn-secondary" style="background-color: #dc2626; margin-top: 1rem;" onclick="location.reload()">Verlassen</button>
+      <div class="board" id="board">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
+      </div>
+
+      <button class="btn btn-secondary hidden" id="rematch-btn">
+        Neues Spiel
+      </button>
+      <button
+        class="btn btn-secondary"
+        style="background-color: #dc2626; margin-top: 1rem"
+        onclick="location.reload()"
+      >
+        Verlassen
+      </button>
     </div>
 
     <!-- Firebase SDKs (Modular v10) -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+      import {
+        getDatabase,
+        ref,
+        set,
+        get,
+        onValue,
+        update,
+      } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // === TRAGE HIER DEINE ECHTEN FIREBASE-DATEN EIN ===
-        const firebaseConfig = {
-            apiKey: "DEINE_API_KEY_HIER_EINFUEGEN",
-            authDomain: "DEIN_PROJECT_ID.firebaseapp.com",
-            databaseURL: "https://DEIN_PROJECT_ID-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "DEIN_PROJECT_ID",
-            storageBucket: "DEIN_PROJECT_ID.appspot.com",
-            messagingSenderId: "DEINE_MESSAGING_SENDER_ID",
-            appId: "DEINE_APP_ID"
+      // === TRAGE HIER DEINE ECHTEN FIREBASE-DATEN EIN ===
+      const firebaseConfig = {
+        apiKey: "AIzaSyDTMPU-MgG7DMhab3cebYaZPZTj-C9NvS8",
+        authDomain: "tic-tac-toe-online-98f34.firebaseapp.com",
+        databaseURL:
+          "https://tic-tac-toe-online-98f34-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "tic-tac-toe-online-98f34",
+        storageBucket: "tic-tac-toe-online-98f34.firebasestorage.app",
+        messagingSenderId: "229449682297",
+        appId: "1:229449682297:web:e9fdb16aaf14a52fdd73a8",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+
+      // App State
+      let currentRoomCode = null;
+      let myRole = null;
+      const myPlayerId = Math.random().toString(36).substring(2, 9);
+
+      const lobbyScreen = document.getElementById("lobby-screen");
+      const gameScreen = document.getElementById("game-screen");
+      const statusEl = document.getElementById("status");
+      const boardEl = document.getElementById("board");
+      const cells = document.querySelectorAll(".cell");
+      const displayCodeEl = document.getElementById("display-code");
+      const rematchBtn = document.getElementById("rematch-btn");
+
+      // Audio Generator (Web Audio API)
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      function playSound(type) {
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === "click") {
+          osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(
+            800,
+            audioCtx.currentTime + 0.08,
+          );
+          gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+          gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.08);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.08);
+        } else if (type === "win") {
+          osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+          osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+          osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2);
+          gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+          gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.4);
+        }
+      }
+
+      // URL Check: Wenn ein Link mit ?room=CODE geöffnet wird
+      window.addEventListener("DOMContentLoaded", () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomParam = urlParams.get("room");
+        if (roomParam) {
+          document.getElementById("room-input").value = roomParam;
+          joinRoom(roomParam.toUpperCase());
+        }
+      });
+
+      document
+        .getElementById("create-room-btn")
+        .addEventListener("click", () => {
+          const roomCode = Math.random()
+            .toString(36)
+            .substring(2, 8)
+            .toUpperCase();
+          createAndJoinRoom(roomCode);
+        });
+
+      document.getElementById("join-room-btn").addEventListener("click", () => {
+        const code = document
+          .getElementById("room-input")
+          .value.trim()
+          .toUpperCase();
+        if (code) joinRoom(code);
+      });
+
+      async function createAndJoinRoom(code) {
+        const roomRef = ref(db, "rooms/" + code);
+        const snapshot = await get(roomRef);
+
+        if (snapshot.exists()) {
+          createAndJoinRoom(
+            Math.random().toString(36).substring(2, 8).toUpperCase(),
+          );
+          return;
+        }
+
+        const initialData = {
+          board: Array(9).fill(""),
+          turn: "X",
+          playerX: myPlayerId,
+          playerO: null,
+          winner: null,
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+        await set(roomRef, initialData);
+        enterRoom(code, "X");
+      }
 
-        // App State
-        let currentRoomCode = null;
-        let myRole = null; 
-        const myPlayerId = Math.random().toString(36).substring(2, 9);
+      async function joinRoom(code) {
+        const roomRef = ref(db, "rooms/" + code);
+        const snapshot = await get(roomRef);
 
-        const lobbyScreen = document.getElementById('lobby-screen');
-        const gameScreen = document.getElementById('game-screen');
-        const statusEl = document.getElementById('status');
-        const boardEl = document.getElementById('board');
-        const cells = document.querySelectorAll('.cell');
-        const displayCodeEl = document.getElementById('display-code');
-        const rematchBtn = document.getElementById('rematch-btn');
-
-        // Audio Generator (Web Audio API)
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            
-            if (type === 'click') {
-                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.08);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.08);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.08);
-            } else if (type === 'win') {
-                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
-                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
-                osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2);
-                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
-            }
+        if (!snapshot.exists()) {
+          alert("Raum nicht gefunden!");
+          return;
         }
 
-        // URL Check: Wenn ein Link mit ?room=CODE geöffnet wird
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const roomParam = urlParams.get('room');
-            if (roomParam) {
-                document.getElementById('room-input').value = roomParam;
-                joinRoom(roomParam.toUpperCase());
-            }
+        const data = snapshot.val();
+        let role = "spectator";
+
+        if (data.playerX === myPlayerId) {
+          role = "X";
+        } else if (data.playerO === myPlayerId) {
+          role = "O";
+        } else if (!data.playerX) {
+          await update(roomRef, { playerX: myPlayerId });
+          role = "X";
+        } else if (!data.playerO) {
+          await update(roomRef, { playerO: myPlayerId });
+          role = "O";
+        }
+
+        enterRoom(code, role);
+      }
+
+      function enterRoom(code, role) {
+        currentRoomCode = code;
+        myRole = role;
+        lobbyScreen.classList.add("hidden");
+        gameScreen.classList.remove("hidden");
+        displayCodeEl.textContent = code;
+
+        const newUrl = `${window.location.pathname}?room=${code}`;
+        window.history.pushState({ path: newUrl }, "", newUrl);
+
+        listenToRoom();
+      }
+
+      function listenToRoom() {
+        const roomRef = ref(db, "rooms/" + currentRoomCode);
+        onValue(roomRef, (snapshot) => {
+          if (!snapshot.exists()) return;
+          const data = snapshot.val();
+          updateUI(data);
+        });
+      }
+
+      function updateUI(data) {
+        cells.forEach((cell, index) => {
+          const val = data.board[index];
+          cell.textContent = val;
+          cell.className = "cell";
+          if (val === "X") cell.classList.add("x", "taken");
+          if (val === "O") cell.classList.add("o", "taken");
         });
 
-        document.getElementById('create-room-btn').addEventListener('click', () => {
-            const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-            createAndJoinRoom(roomCode);
+        if (data.winner) {
+          if (data.winner === "draw") {
+            statusEl.textContent = "Unentschieden!";
+          } else {
+            statusEl.textContent = `Spieler ${data.winner} hat gewonnen! 🎉`;
+          }
+          rematchBtn.classList.remove("hidden");
+        } else {
+          rematchBtn.classList.add("hidden");
+          if (!data.playerO) {
+            statusEl.textContent = "Warte auf Mitspieler...";
+          } else if (data.turn === myRole) {
+            statusEl.textContent = "Du bist am Zug!";
+          } else {
+            statusEl.textContent = `Gegner ist am Zug (${data.turn})...`;
+          }
+        }
+      }
+
+      cells.forEach((cell) => {
+        cell.addEventListener("click", async () => {
+          if (myRole === "spectator") return;
+          const index = parseInt(cell.dataset.index);
+
+          const roomRef = ref(db, "rooms/" + currentRoomCode);
+          const snapshot = (val = await get(roomRef));
+          const data = snapshot.val();
+
+          if (
+            data.winner ||
+            data.board[index] !== "" ||
+            data.turn !== myRole ||
+            !data.playerO
+          ) {
+            return;
+          }
+
+          data.board[index] = myRole;
+          playSound("click");
+
+          const winner = checkWinner(data.board);
+          if (winner) {
+            data.winner = winner;
+            playSound("win");
+          } else {
+            data.turn = myRole === "X" ? "O" : "X";
+          }
+
+          await set(roomRef, data);
         });
+      });
 
-        document.getElementById('join-room-btn').addEventListener('click', () => {
-            const code = document.getElementById('room-input').value.trim().toUpperCase();
-            if (code) joinRoom(code);
+      function checkWinner(board) {
+        const lines = [
+          [0, 1, 2],
+          [3, 4, 5],
+          [6, 7, 8],
+          [0, 3, 6],
+          [1, 4, 7],
+          [2, 5, 8],
+          [0, 4, 8],
+          [2, 4, 6],
+        ];
+        for (let line of lines) {
+          const [a, b, c] = line;
+          if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+            return board[a];
+          }
+        }
+        if (board.every((cell) => cell !== "")) return "draw";
+        return null;
+      }
+
+      rematchBtn.addEventListener("click", async () => {
+        const roomRef = ref(db, "rooms/" + currentRoomCode);
+        await update(roomRef, {
+          board: Array(9).fill(""),
+          turn: "X",
+          winner: null,
         });
-
-        async function createAndJoinRoom(code) {
-            const roomRef = ref(db, 'rooms/' + code);
-            const snapshot = await get(roomRef);
-            
-            if (snapshot.exists()) {
-                createAndJoinRoom(Math.random().toString(36).substring(2, 8).toUpperCase());
-                return;
-            }
-
-            const initialData = {
-                board: Array(9).fill(""),
-                turn: "X",
-                playerX: myPlayerId,
-                playerO: null,
-                winner: null
-            };
-
-            await set(roomRef, initialData);
-            enterRoom(code, 'X');
-        }
-
-        async function joinRoom(code) {
-            const roomRef = ref(db, 'rooms/' + code);
-            const snapshot = await get(roomRef);
-
-            if (!snapshot.exists()) {
-                alert("Raum nicht gefunden!");
-                return;
-            }
-
-            const data = snapshot.val();
-            let role = 'spectator';
-
-            if (data.playerX === myPlayerId) {
-                role = 'X';
-            } else if (data.playerO === myPlayerId) {
-                role = 'O';
-            } else if (!data.playerX) {
-                await update(roomRef, { playerX: myPlayerId });
-                role = 'X';
-            } else if (!data.playerO) {
-                await update(roomRef, { playerO: myPlayerId });
-                role = 'O';
-            }
-
-            enterRoom(code, role);
-        }
-
-        function enterRoom(code, role) {
-            currentRoomCode = code;
-            myRole = role;
-            lobbyScreen.classList.add('hidden');
-            gameScreen.classList.remove('hidden');
-            displayCodeEl.textContent = code;
-
-            const newUrl = `${window.location.pathname}?room=${code}`;
-            window.history.pushState({path: newUrl}, '', newUrl);
-
-            listenToRoom();
-        }
-
-        function listenToRoom() {
-            const roomRef = ref(db, 'rooms/' + currentRoomCode);
-            onValue(roomRef, (snapshot) => {
-                if (!snapshot.exists()) return;
-                const data = snapshot.val();
-                updateUI(data);
-            });
-        }
-
-        function updateUI(data) {
-            cells.forEach((cell, index) => {
-                const val = data.board[index];
-                cell.textContent = val;
-                cell.className = 'cell';
-                if (val === 'X') cell.classList.add('x', 'taken');
-                if (val === 'O') cell.classList.add('o', 'taken');
-            });
-
-            if (data.winner) {
-                if (data.winner === 'draw') {
-                    statusEl.textContent = "Unentschieden!";
-                } else {
-                    statusEl.textContent = `Spieler ${data.winner} hat gewonnen! 🎉`;
-                }
-                rematchBtn.classList.remove('hidden');
-            } else {
-                rematchBtn.classList.add('hidden');
-                if (!data.playerO) {
-                    statusEl.textContent = "Warte auf Mitspieler...";
-                } else if (data.turn === myRole) {
-                    statusEl.textContent = "Du bist am Zug!";
-                } else {
-                    statusEl.textContent = `Gegner ist am Zug (${data.turn})...`;
-                }
-            }
-        }
-
-        cells.forEach(cell => {
-            cell.addEventListener('click', async () => {
-                if (myRole === 'spectator') return;
-                const index = parseInt(cell.dataset.index);
-
-                const roomRef = ref(db, 'rooms/' + currentRoomCode);
-                const snapshot =val = await get(roomRef);
-                const data = snapshot.val();
-
-                if (data.winner || data.board[index] !== "" || data.turn !== myRole || !data.playerO) {
-                    return;
-                }
-
-                data.board[index] = myRole;
-                playSound('click');
-
-                const winner = checkWinner(data.board);
-                if (winner) {
-                    data.winner = winner;
-                    playSound('win');
-                } else {
-                    data.turn = myRole === 'X' ? 'O' : 'X';
-                }
-
-                await set(roomRef, data);
-            });
-        });
-
-        function checkWinner(board) {
-            const lines = [
-                [0,1,2], [3,4,5], [6,7,8],
-                [0,3,6], [1,4,7], [2,5,8],
-                [0,4,8], [2,4,6]
-            ];
-            for (let line of lines) {
-                const [a, b, c] = line;
-                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-                    return board[a];
-                }
-            }
-            if (board.every(cell => cell !== "")) return 'draw';
-            return null;
-        }
-
-        rematchBtn.addEventListener('click', async () => {
-            const roomRef = ref(db, 'rooms/' + currentRoomCode);
-            await update(roomRef, {
-                board: Array(9).fill(""),
-                turn: "X",
-                winner: null
-            });
-        });
+      });
     </script>
-</body>
+  </body>
 </html>

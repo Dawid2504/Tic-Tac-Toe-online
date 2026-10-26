@@ -126,10 +126,26 @@
       }
       .room-code-display {
         background: #0f172a;
-        padding: 0.5px;
+        padding: 0.5rem;
         border-radius: 4px;
         font-family: monospace;
         user-select: all;
+      }
+
+      .waiting-spinner {
+        width: 2.5rem;
+        height: 2.5rem;
+        margin: 2rem auto 1rem;
+        border: 4px solid var(--border-color);
+        border-top-color: #3b82f6;
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
       }
     </style>
   </head>
@@ -176,10 +192,20 @@
       <button
         class="btn btn-secondary"
         style="background-color: #dc2626; margin-top: 1rem"
-        onclick="location.reload()"
+        id="leave-game-btn"
       >
         Verlassen
       </button>
+    </div>
+
+    <div class="container hidden" id="waiting-screen">
+      <h1>Warte auf Mitspieler</h1>
+      <div class="waiting-spinner" aria-hidden="true"></div>
+      <p>Der Raum ist bereit. Sobald der zweite Spieler beitritt, kann das Spiel beginnen.</p>
+      <p style="font-size: 0.85rem; color: #94a3b8">
+        Raum-Code: <span id="waiting-code" class="room-code-display"></span>
+      </p>
+      <button class="btn btn-secondary" id="leave-waiting-btn">Verlassen</button>
     </div>
 
     <!-- Firebase SDKs (Modular v10) -->
@@ -192,6 +218,7 @@
         get,
         onValue,
         update,
+        runTransaction,
       } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
       // === TRAGE HIER DEINE ECHTEN FIREBASE-DATEN EIN ===
@@ -212,15 +239,22 @@
       // App State
       let currentRoomCode = null;
       let myRole = null;
-      const myPlayerId = Math.random().toString(36).substring(2, 9);
+      const myPlayerId =
+        sessionStorage.getItem("tic-tac-toe-player-id") ||
+        Math.random().toString(36).substring(2, 9);
+      sessionStorage.setItem("tic-tac-toe-player-id", myPlayerId);
 
       const lobbyScreen = document.getElementById("lobby-screen");
       const gameScreen = document.getElementById("game-screen");
+      const waitingScreen = document.getElementById("waiting-screen");
       const statusEl = document.getElementById("status");
       const boardEl = document.getElementById("board");
       const cells = document.querySelectorAll(".cell");
       const displayCodeEl = document.getElementById("display-code");
+      const waitingCodeEl = document.getElementById("waiting-code");
       const rematchBtn = document.getElementById("rematch-btn");
+      const leaveGameBtn = document.getElementById("leave-game-btn");
+      const leaveWaitingBtn = document.getElementById("leave-waiting-btn");
 
       // Audio Generator (Web Audio API)
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -312,21 +346,28 @@
           return;
         }
 
-        const data = snapshot.val();
-        let role = "spectator";
+        const result = await runTransaction(roomRef, (data) => {
+          if (!data || data.status === "closed") return data;
+          if (data.playerX === myPlayerId || data.playerO === myPlayerId) {
+            return data;
+          }
+          if (!data.playerX) data.playerX = myPlayerId;
+          else if (!data.playerO) data.playerO = myPlayerId;
+          return data;
+        });
 
-        if (data.playerX === myPlayerId) {
-          role = "X";
-        } else if (data.playerO === myPlayerId) {
-          role = "O";
-        } else if (!data.playerX) {
-          await update(roomRef, { playerX: myPlayerId });
-          role = "X";
-        } else if (!data.playerO) {
-          await update(roomRef, { playerO: myPlayerId });
-          role = "O";
+        const data = result.snapshot.val();
+        const role =
+          data.playerX === myPlayerId
+            ? "X"
+            : data.playerO === myPlayerId
+              ? "O"
+              : "spectator";
+
+        if (role === "spectator") {
+          alert("Der Raum ist bereits voll oder wurde beendet.");
+          return;
         }
-
         enterRoom(code, role);
       }
 
@@ -334,8 +375,10 @@
         currentRoomCode = code;
         myRole = role;
         lobbyScreen.classList.add("hidden");
-        gameScreen.classList.remove("hidden");
+        gameScreen.classList.add("hidden");
+        waitingScreen.classList.remove("hidden");
         displayCodeEl.textContent = code;
+        waitingCodeEl.textContent = code;
 
         const newUrl = `${window.location.pathname}?room=${code}`;
         window.history.pushState({ path: newUrl }, "", newUrl);
@@ -346,15 +389,32 @@
       function listenToRoom() {
         const roomRef = ref(db, "rooms/" + currentRoomCode);
         onValue(roomRef, (snapshot) => {
-          if (!snapshot.exists()) return;
+          if (!snapshot.exists()) {
+            showEnded("Der Raum wurde beendet.");
+            return;
+          }
           const data = snapshot.val();
           updateUI(data);
         });
       }
 
       function updateUI(data) {
+        if (data.status === "closed") {
+          showEnded(
+            data.closedBy === myRole
+              ? "Du hast das Spiel verlassen."
+              : "Der andere Spieler hat das Spiel verlassen.",
+          );
+          return;
+        }
+
+        const hasOpponent = Boolean(data.playerX && data.playerO);
+        waitingScreen.classList.toggle("hidden", hasOpponent);
+        gameScreen.classList.toggle("hidden", !hasOpponent);
+        if (!hasOpponent) return;
+
         cells.forEach((cell, index) => {
-          const val = data.board[index];
+          const val = data.board?.[index] || "";
           cell.textContent = val;
           cell.className = "cell";
           if (val === "X") cell.classList.add("x", "taken");
@@ -386,30 +446,28 @@
           const index = parseInt(cell.dataset.index);
 
           const roomRef = ref(db, "rooms/" + currentRoomCode);
-          const snapshot = (val = await get(roomRef));
-          const data = snapshot.val();
+          const result = await runTransaction(roomRef, (data) => {
+            if (
+              !data ||
+              data.status === "closed" ||
+              data.winner ||
+              !data.playerO ||
+              data.turn !== myRole ||
+              data.board[index] !== ""
+            ) {
+              return;
+            }
 
-          if (
-            data.winner ||
-            data.board[index] !== "" ||
-            data.turn !== myRole ||
-            !data.playerO
-          ) {
-            return;
-          }
+            data.board[index] = myRole;
+            const winner = checkWinner(data.board);
+            if (winner) data.winner = winner;
+            else data.turn = myRole === "X" ? "O" : "X";
+            return data;
+          });
 
-          data.board[index] = myRole;
+          if (!result.committed) return;
           playSound("click");
-
-          const winner = checkWinner(data.board);
-          if (winner) {
-            data.winner = winner;
-            playSound("win");
-          } else {
-            data.turn = myRole === "X" ? "O" : "X";
-          }
-
-          await set(roomRef, data);
+          if (result.snapshot.val().winner) playSound("win");
         });
       });
 
@@ -442,6 +500,33 @@
           winner: null,
         });
       });
+
+      async function leaveRoom() {
+        if (!currentRoomCode) return;
+        const roomRef = ref(db, "rooms/" + currentRoomCode);
+        try {
+          await update(roomRef, {
+            status: "closed",
+            closedBy: myRole,
+          });
+        } catch (error) {
+          console.error("Spiel konnte nicht beendet werden:", error);
+          alert("Das Spiel konnte gerade nicht beendet werden. Bitte erneut versuchen.");
+        }
+      }
+
+      function showEnded(message) {
+        waitingScreen.classList.add("hidden");
+        gameScreen.classList.remove("hidden");
+        boardEl.classList.add("hidden");
+        rematchBtn.classList.add("hidden");
+        statusEl.textContent = message;
+        leaveGameBtn.textContent = "Zurück zur Lobby";
+        leaveGameBtn.onclick = () => window.location.replace(window.location.pathname);
+      }
+
+      leaveGameBtn.addEventListener("click", leaveRoom);
+      leaveWaitingBtn.addEventListener("click", leaveRoom);
     </script>
   </body>
 </html>

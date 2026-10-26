@@ -4,23 +4,50 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Online Tic Tac Toe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
       :root {
-        --bg-color: #0f172a;
-        --card-bg: #1e293b;
+        --bg-color: #0a0e27;
+        --card-bg: rgba(30, 41, 59, 0.5);
         --text-color: #f8fafc;
-        --accent-x: #38bdf8;
-        --accent-o: #f43f5e;
-        --border-color: #334155;
+        --text-muted: #94a3b8;
+        --accent-x: #22d3ee;
+        --accent-o: #f472b6;
+        --border-color: rgba(148, 163, 184, 0.2);
+        --primary: #6366f1;
+        --primary-hover: #818cf8;
+        --danger: #ef4444;
+      }
+
+      * {
+        box-sizing: border-box;
       }
 
       body {
-        font-family:
-          "Segoe UI",
-          system-ui,
-          -apple-system,
-          sans-serif;
+        font-family: "Outfit", "Segoe UI", system-ui, -apple-system, sans-serif;
         background-color: var(--bg-color);
+        background-image:
+          radial-gradient(
+            circle at 15% 10%,
+            rgba(99, 102, 241, 0.18),
+            transparent 45%
+          ),
+          radial-gradient(
+            circle at 85% 90%,
+            rgba(244, 114, 182, 0.14),
+            transparent 45%
+          ),
+          radial-gradient(
+            circle at 50% 50%,
+            rgba(34, 211, 238, 0.06),
+            transparent 60%
+          );
+        background-attachment: fixed;
         color: var(--text-color);
         margin: 0;
         min-height: 100vh;
@@ -28,89 +55,240 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        padding: 1.5rem;
+        overflow-x: hidden;
+        position: relative;
+      }
+
+      /* Dekorative Hintergrund-Orbs */
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(90px);
+        pointer-events: none;
+        z-index: 0;
+      }
+      body::before {
+        width: 420px;
+        height: 420px;
+        background: rgba(99, 102, 241, 0.28);
+        top: -140px;
+        left: -140px;
+      }
+      body::after {
+        width: 420px;
+        height: 420px;
+        background: rgba(244, 114, 182, 0.18);
+        bottom: -140px;
+        right: -140px;
       }
 
       .container {
-        background-color: var(--card-bg);
-        padding: 2rem;
-        border-radius: 1rem;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        position: relative;
+        z-index: 1;
+        background: var(--card-bg);
+        backdrop-filter: blur(24px) saturate(160%);
+        -webkit-backdrop-filter: blur(24px) saturate(160%);
+        padding: 2.25rem 2rem;
+        border-radius: 1.5rem;
+        border: 1px solid var(--border-color);
+        box-shadow:
+          0 25px 50px -12px rgba(0, 0, 0, 0.6),
+          0 0 0 1px rgba(255, 255, 255, 0.03),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06);
         text-align: center;
-        max-width: 400px;
-        width: 90%;
+        max-width: 440px;
+        width: 100%;
+        animation: container-in 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      @keyframes container-in {
+        from {
+          opacity: 0;
+          transform: translateY(12px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
       }
 
       h1 {
-        margin-top: 0;
-        font-size: 1.8rem;
-        color: #f1f5f9;
+        margin: 0 0 1rem;
+        font-size: 1.9rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+        background: linear-gradient(
+          135deg,
+          #22d3ee 0%,
+          #a5b4fc 45%,
+          #f472b6 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+      }
+
+      p {
+        color: var(--text-muted);
+        line-height: 1.5;
+        margin: 0.5rem 0;
       }
 
       .btn {
-        background-color: #3b82f6;
+        position: relative;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
         color: white;
         border: none;
-        padding: 0.75rem 1.5rem;
+        padding: 0.85rem 1.5rem;
+        font-family: inherit;
         font-size: 1rem;
-        border-radius: 0.5rem;
+        border-radius: 0.75rem;
         cursor: pointer;
         font-weight: 600;
-        transition: background 0.2s;
+        letter-spacing: 0.01em;
+        transition:
+          transform 0.18s ease,
+          box-shadow 0.18s ease,
+          background 0.18s ease;
         margin: 0.5rem 0;
         width: 100%;
+        box-shadow:
+          0 4px 14px rgba(99, 102, 241, 0.35),
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
       }
       .btn:hover {
-        background-color: #2563eb;
+        transform: translateY(-2px);
+        box-shadow:
+          0 10px 24px rgba(99, 102, 241, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        background: linear-gradient(135deg, #818cf8, #a78bfa);
       }
+      .btn:active {
+        transform: translateY(0);
+      }
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
       .btn-secondary {
-        background-color: #475569;
+        background: rgba(71, 85, 105, 0.55);
+        border: 1px solid var(--border-color);
+        box-shadow:
+          0 4px 12px rgba(0, 0, 0, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06);
       }
       .btn-secondary:hover {
-        background-color: #334155;
+        background: rgba(100, 116, 139, 0.7);
+        box-shadow:
+          0 10px 20px rgba(0, 0, 0, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
       }
 
       input {
-        width: calc(100% - 1rem);
-        padding: 0.75rem;
+        width: 100%;
+        padding: 0.85rem 1rem;
         margin: 0.5rem 0;
-        border-radius: 0.5rem;
+        border-radius: 0.75rem;
         border: 1px solid var(--border-color);
-        background: #0f172a;
+        background: rgba(15, 23, 42, 0.65);
         color: white;
-        font-size: 1rem;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 1.05rem;
         text-align: center;
+        letter-spacing: 0.3em;
+        transition:
+          border-color 0.18s ease,
+          box-shadow 0.18s ease,
+          background 0.18s ease;
+      }
+      input::placeholder {
+        color: #64748b;
+        letter-spacing: 0.05em;
+        font-family: "Outfit", sans-serif;
+      }
+      input:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: rgba(15, 23, 42, 0.9);
+        box-shadow:
+          0 0 0 3px rgba(99, 102, 241, 0.25),
+          0 0 20px rgba(99, 102, 241, 0.15);
+      }
+
+      hr {
+        border: 0;
+        height: 1px;
+        margin: 1.5rem 0;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--border-color),
+          transparent
+        ) !important;
+        border-top: none !important;
       }
 
       .board {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
+        gap: 12px;
         margin: 1.5rem 0;
+        padding: 12px;
+        background: rgba(15, 23, 42, 0.5);
+        border-radius: 1rem;
+        border: 1px solid var(--border-color);
       }
 
       .cell {
         aspect-ratio: 1;
-        background-color: #0f172a;
-        border: 2px solid var(--border-color);
-        border-radius: 0.5rem;
-        font-size: 2.5rem;
-        font-weight: bold;
+        background: linear-gradient(145deg, #111a33, #1a2340);
+        border: 2px solid rgba(148, 163, 184, 0.12);
+        border-radius: 0.85rem;
+        font-size: 2.75rem;
+        font-weight: 700;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: background 0.2s;
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.18s ease,
+          border-color 0.18s ease,
+          background 0.18s ease;
+        user-select: none;
+        font-family: "Outfit", sans-serif;
       }
 
       .cell:hover:not(.taken) {
-        background-color: #1e293b;
-        border-color: #64748b;
+        background: linear-gradient(145deg, #1a2340, #232d52);
+        border-color: rgba(99, 102, 241, 0.6);
+        box-shadow:
+          0 0 0 2px rgba(99, 102, 241, 0.2),
+          0 8px 20px rgba(99, 102, 241, 0.25);
+        transform: scale(1.03);
       }
       .cell.x {
         color: var(--accent-x);
+        border-color: rgba(34, 211, 238, 0.35);
+        text-shadow: 0 0 24px rgba(34, 211, 238, 0.7);
+        box-shadow:
+          0 0 0 1px rgba(34, 211, 238, 0.15),
+          inset 0 0 20px rgba(34, 211, 238, 0.08);
       }
       .cell.o {
         color: var(--accent-o);
+        border-color: rgba(244, 114, 182, 0.35);
+        text-shadow: 0 0 24px rgba(244, 114, 182, 0.7);
+        box-shadow:
+          0 0 0 1px rgba(244, 114, 182, 0.15),
+          inset 0 0 20px rgba(244, 114, 182, 0.08);
       }
       .cell.taken {
         cursor: not-allowed;
@@ -119,32 +297,77 @@
       .hidden {
         display: none !important;
       }
+
       #status {
         font-size: 1.1rem;
-        margin-bottom: 1rem;
-        font-weight: 500;
+        margin: 0.25rem 0 1rem;
+        font-weight: 600;
+        color: #e2e8f0;
+        min-height: 1.5em;
+        letter-spacing: 0.01em;
       }
+
       .room-code-display {
-        background: #0f172a;
-        padding: 0.5rem;
-        border-radius: 4px;
-        font-family: monospace;
+        display: inline-block;
+        background: rgba(15, 23, 42, 0.7);
+        padding: 0.35rem 0.7rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-color);
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 700;
+        color: var(--accent-x);
+        letter-spacing: 0.15em;
         user-select: all;
+        font-size: 0.95rem;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
       }
 
       .waiting-spinner {
-        width: 2.5rem;
-        height: 2.5rem;
-        margin: 2rem auto 1rem;
-        border: 4px solid var(--border-color);
-        border-top-color: #3b82f6;
+        width: 3rem;
+        height: 3rem;
+        margin: 2rem auto 1.5rem;
         border-radius: 50%;
+        border: 3px solid rgba(148, 163, 184, 0.15);
+        border-top-color: var(--primary);
+        border-right-color: #a78bfa;
         animation: spin 0.9s linear infinite;
+        box-shadow: 0 0 24px rgba(99, 102, 241, 0.3);
       }
 
       @keyframes spin {
         to {
           transform: rotate(360deg);
+        }
+      }
+
+      /* Unterstreichung für Sekundär-Buttons wie "Verlassen" */
+      #leave-game-btn {
+        background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+        box-shadow:
+          0 4px 14px rgba(220, 38, 38, 0.35),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        margin-top: 1rem;
+      }
+      #leave-game-btn:hover {
+        background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+        box-shadow:
+          0 10px 24px rgba(220, 38, 38, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      }
+
+      /* Sanfte Fade-Animation für Screens */
+      #game-screen,
+      #waiting-screen {
+        animation: fade-in 0.35s ease;
+      }
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
       }
     </style>
@@ -177,7 +400,7 @@
     <div class="container hidden" id="game-screen">
       <h1>Tic Tac Toe</h1>
       <div id="status">Lade...</div>
-      <p style="font-size: 0.85rem; color: #94a3b8">
+      <p style="font-size: 0.85rem; color: var(--text-muted)">
         Raum-Code: <span id="display-code" class="room-code-display"></span>
       </p>
 
@@ -208,8 +431,11 @@
     <div class="container hidden" id="waiting-screen">
       <h1>Warte auf Mitspieler</h1>
       <div class="waiting-spinner" aria-hidden="true"></div>
-      <p>Der Raum ist bereit. Sobald der zweite Spieler beitritt, kann das Spiel beginnen.</p>
-      <p style="font-size: 0.85rem; color: #94a3b8">
+      <p>
+        Der Raum ist bereit. Sobald der zweite Spieler beitritt, kann das Spiel
+        beginnen.
+      </p>
+      <p style="font-size: 0.85rem; color: var(--text-muted)">
         Raum-Code: <span id="waiting-code" class="room-code-display"></span>
       </p>
       <button class="btn btn-secondary" id="leave-waiting-btn">Verlassen</button>
@@ -587,7 +813,9 @@
           showEnded("Das Spiel wurde beendet.");
         } catch (error) {
           console.error("Spiel konnte nicht beendet werden:", error);
-          alert("Das Spiel konnte gerade nicht beendet werden. Bitte erneut versuchen.");
+          alert(
+            "Das Spiel konnte gerade nicht beendet werden. Bitte erneut versuchen.",
+          );
           isLeavingRoom = false;
         }
       }
@@ -602,7 +830,10 @@
               return;
             });
           } catch (error) {
-            console.error("Spielraum konnte nicht automatisch gelöscht werden:", error);
+            console.error(
+              "Spielraum konnte nicht automatisch gelöscht werden:",
+              error,
+            );
           }
         }, 5000);
       }
@@ -616,7 +847,8 @@
         rematchBtn.classList.add("hidden");
         statusEl.textContent = message;
         leaveGameBtn.textContent = "Zurück zur Lobby";
-        leaveGameBtn.onclick = () => window.location.replace(window.location.pathname);
+        leaveGameBtn.onclick = () =>
+          window.location.replace(window.location.pathname);
       }
 
       leaveGameBtn.addEventListener("click", leaveRoom);

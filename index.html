@@ -29,7 +29,12 @@
       }
 
       body {
-        font-family: "Outfit", "Segoe UI", system-ui, -apple-system, sans-serif;
+        font-family:
+          "Outfit",
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
         background-color: var(--bg-color);
         background-image:
           radial-gradient(
@@ -524,7 +529,9 @@
       <p style="font-size: 0.85rem; color: var(--text-muted)">
         Raum-Code: <span id="waiting-code" class="room-code-display"></span>
       </p>
-      <button class="btn btn-secondary" id="leave-waiting-btn">Verlassen</button>
+      <button class="btn btn-secondary" id="leave-waiting-btn">
+        Verlassen
+      </button>
     </div>
 
     <!-- Firebase SDKs (Modular v10) -->
@@ -569,8 +576,7 @@
         Math.random().toString(36).substring(2, 9);
       sessionStorage.setItem("tic-tac-toe-player-id", myPlayerId);
 
-      let myName =
-        sessionStorage.getItem("tic-tac-toe-player-name") || "";
+      let myName = sessionStorage.getItem("tic-tac-toe-player-name") || "";
 
       const WINNING_COMBINATIONS = [
         [0, 1, 2],
@@ -983,10 +989,7 @@
           } else if (data.turn === myRole) {
             statusEl.textContent = "Du bist am Zug!";
           } else {
-            const oppName = getPlayerName(
-              data,
-              data.turn === "X" ? "X" : "O",
-            );
+            const oppName = getPlayerName(data, data.turn === "X" ? "X" : "O");
             statusEl.textContent = `${oppName} ist am Zug...`;
           }
         }
@@ -1137,10 +1140,13 @@
           cleanupTimer = null;
           if (!currentRoomCode) return;
           try {
-            await runTransaction(ref(db, "rooms/" + currentRoomCode), (data) => {
-              if (data?.winner) return null;
-              return;
-            });
+            await runTransaction(
+              ref(db, "rooms/" + currentRoomCode),
+              (data) => {
+                if (data?.winner) return null;
+                return;
+              },
+            );
           } catch (error) {
             console.error(
               "Spielraum konnte nicht automatisch gelöscht werden:",
